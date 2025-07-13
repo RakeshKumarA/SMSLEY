@@ -11,64 +11,61 @@ export default function AppInitializer() {
     const init = async () => {
       const supabase = createClient();
 
-      // 1. Get authenticated user
+      // Step 1: Get authenticated user
       const {
         data: { user },
         error: userError,
       } = await supabase.auth.getUser();
 
-      if (userError) {
-        console.error("❌ Failed to get auth user:", userError.message);
-        return;
-      }
-
-      if (!user) {
-        console.warn("⚠️ No authenticated user found.");
+      if (userError || !user) {
+        console.error("❌ Failed to get auth user:", userError?.message);
         return;
       }
 
       console.log("✅ Authenticated user:", user.email);
 
-      // 2. Fetch profile by ID
-      const { data: profiles, error: profileFetchError } = await supabase
+      // Step 2: Try fetching user profile
+      const { data: profiles, error: profileError } = await supabase
         .from("profiles")
         .select("id, role")
         .eq("id", user.id);
 
-      const profile = profiles?.[0];
+      if (profileError) {
+        console.error("❌ Error fetching profile:", profileError.message);
+        return;
+      }
 
-      // 3. If no profile found, create one
-      if (!profile) {
+      let role = profiles?.[0]?.role;
+
+      // Step 3: Insert profile if it doesn’t exist
+      if (!role) {
         const username =
           user.user_metadata?.username || user.user_metadata?.display_name;
 
         if (!username) {
-          console.warn(
-            "⚠️ Username not found in metadata. Skipping profile creation."
-          );
+          console.warn("⚠️ No username found. Profile not created.");
           return;
         }
 
-        const { error: upsertError } = await supabase.from("profiles").upsert({
+        const { error: insertError } = await supabase.from("profiles").insert({
           id: user.id,
           email: user.email,
           username,
-          role: "user", // default role
+          role: "user",
         });
 
-        if (upsertError) {
-          console.error("❌ Failed to insert profile:", upsertError.message);
-        } else {
-          console.log("✅ New profile created for:", user.email);
-          setRole("user"); // default role
+        if (insertError) {
+          console.error("❌ Failed to create profile:", insertError.message);
+          return;
         }
 
-        return;
+        console.log("✅ Profile created for", user.email);
+        role = "user"; // default role
       }
 
-      // 4. Profile exists — set role in global store
-      setRole(profile.role);
-      console.log("✅ Role loaded:", profile.role);
+      // Step 4: Store role in global store
+      setRole(role?.toLowerCase() ?? "user");
+      console.log("✅ Role set in store:", role);
     };
 
     init();
