@@ -17,7 +17,7 @@ export function RequireRole({
     if (role && !allowedRoles.includes(role)) {
       router.replace("/unauthorized");
     }
-  }, [role]);
+  }, [role, allowedRoles, router]);
 
   if (!role) return null; // or a loader
 

@@ -59,6 +59,9 @@ export function SignUpForm({
           username: username,
           role: "user",
         });
+        if (profileError) {
+          console.error("Profile creation failed:", profileError.message);
+        }
       }
       if (error) throw error;
       router.push("/auth/sign-up-success");
