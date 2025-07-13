@@ -4,6 +4,7 @@ import { AuthButton } from "@/components/auth-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/lib/utils";
 import Link from "next/link";
+import AppInitializer from "@/components/AppInitializer";
 
 export default function ProtectedLayout({
   children,
@@ -25,6 +26,7 @@ export default function ProtectedLayout({
           </div>
         </nav>
         <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">
+          <AppInitializer />
           {children}
         </div>
 
